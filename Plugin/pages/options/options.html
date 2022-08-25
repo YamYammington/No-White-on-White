@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Options</title>
+    <style>
+        * {
+            margin:0;
+            text-align:center;
+        }
+        h2 {
+            margin:10px;
+        }
+        .desc {
+            margin-bottom: 10px;
+        }
+        .options {
+            text-align:center;
+            background-color:#b0b0b0;
+            color:#fff;
+            padding:10px;
+        }
+        #demo-div {
+            text-align:center;
+        }
+        #demo-bg {
+            display: inline-block;
+            width:400px;
+            height:200px;
+            text-align:center;
+            border:2px solid #b0b0b0;
+            border-radius:5px;
+            margin:10px;
+        }
+    </style>
+    <link rel="stylesheet" href="options.css">
+    <script src="options.js"></script>
+</head>
+<body>
+    <h2 style="margin:10px;">No White on White</h2>
+    <p class="desc">A Chrome extension that prevents text with the same background color.</p>
+    <div class="options">
+        <p>Options</p>
+        <br>
+        <span>Color mode&nbsp;&#183;&nbsp;</span>
+        <select id="colormode">
+            <option id="cl" value="cl">Opposite Color</option>
+            <option id="bw" value="bw" disabled>Black/White</option>
+        </select>
+        <p id="cm-desc">Loading description...</p>
+    </div>
+
+    <div id="demo-div">
+        <p class="desc">There is text in this box, but you can't see it. Just click this button and see what this extension can do for you. The demonstration uses whichever color mode you have selected.</p>
+        <button id="demo-btn">Play Demonstration</button><br>
+        <div id="demo-bg" style="background-color:#000000;">
+            <p style="color:#000000;" id="demo-text">You can't see me!</p>
+        </div>
+        <p class="desc">Select the background color</p>
+        <input style="width: 100px; height: 50px" class="desc" type="color" id="demo-color" value="#000000">
+        <p id="selected-color">Selected color: </p>
+    </div>
+</body>
+</html>
