@@ -3,50 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Index</title>
-    <script src="main.js"></script>
-    <style>
-        .container {
-            text-align: center;
-            margin-top: 20px;
-            height: 50vh;
-            width: 100%;
-        }
-        .container-type2 {
-            text-align: center;
-            margin-top: 20px;
-            height: 50vh;
-            width: 100%;
-        }
-        #inverted {
-            width: 400px;
-            height: 100px;
-        }
-        .text {
-            font-size: 20px;
-            font-weight: bold;
-            padding: 10px;
-        }
-        #inv_con {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-    </style>
+    <script src="pages_res/demo.js"></script>
+    <link rel="stylesheet" href="pages_res/demo.css">
 </head>
 <body>
-    <div class="container">
-        <p>Pick a color</p>
-        <input type="color" id="cvc" value="#f0f8ff" style="width:400px;height:100px">
-        <p>Inverted</p>
-        <div id="inv_con">
-            <div id="inverted" style="background-color:#ff0000;"></div>
+    <div class="demo-container">
+        <h3>No White on White Color Inversion Demo</h3>
+        <div class="container">
+            <p>Pick a color, any color</p>
+            <input type="color" id="cvc" value="#b6a5a5">
+            <p>Your color, but inverted</p>
+            <div id="inv_con">
+                <div id="inverted" style="background-color:rgb(73,90,90);"></div>
+            </div>
+        </div>
+        <div class="container">
+            <p>Enter a rgb() style value or a hex value</p>
+            <input type="text" id="parse_t" value="rgb(255,0,0)">
+            <button id="parse">Parse</button>
+            <p id="parsed_result" style><span class="text">Result</span></p>
         </div>
     </div>
-    <div class="container-type2">
-        <input type="text" id="parse_t" value="rgb(255,0,0)">
-        <button id="parse">Parse</button>
-        <p id="parsed_result" style><span class="text">Result</span></p>
-    </div>
-
 </body>
 </html>
