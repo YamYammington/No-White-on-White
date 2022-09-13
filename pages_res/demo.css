@@ -65,9 +65,9 @@ button:hover {
     border-bottom: 1px solid #f00;
 }
 input:focus {
-   -webkit-box-shadow: 0 2px 4px black;
-   -moz-box-shadow: 0 2px 4px black;
-   box-shadow: 0 2px 4px black;
+   -webkit-box-shadow: 0 2px 4px #000;
+   -moz-box-shadow: 0 2px 4px #000;
+   box-shadow: 0 2px 4px #000;
     border-bottom: 1px solid #ff0000;
 }
 

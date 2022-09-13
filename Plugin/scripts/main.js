@@ -1,21 +1,18 @@
 // VARS
 
-var DEFAULT_BW = {
+const DEFAULT_BW = {
     black: '#000000',
     white: '#ffffff',
     threshold: Math.sqrt(1.05 * 0.05) - 0.05
 };
 
-
 // HELPER FUNCTIONS
 
 function storageHandler(action, request, subject) {
-    if (action == 'get') {
+    if (action === 'get') {
         switch (request) {
             case 'colormode':
-                chrome.storage.sync.get(['colormode'], function(result) {
-                    return result.colormode;
-                });
+                chrome.storage.sync.get(['colormode'], (result) => {return result.colormode});
                 break;
         }
     } else {
@@ -29,45 +26,43 @@ function storageHandler(action, request, subject) {
 }
 
 function getParents(elem) {
-  var parents = [];
-  while(elem.parentNode && elem.parentNode.nodeName.toLowerCase() != 'body') {
+  let parents = [];
+  while(elem.parentNode && elem.parentNode.nodeName.toLowerCase() !== 'body') {
     elem = elem.parentNode;
     parents.push(elem);
   }
   return parents;
 }
 
-function HSLToRGB(h, s, l) {
-    s /= 100;
-    l /= 100;
-    var k = n => (n + h / 30) % 12;
-    var a = s * Math.min(l, 1 - l);
-    var f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-    return [Math.round(255 * f(0)), Math.round(255 * f(8)), Math.round(255 * f(4))];
-};
-
-function padz(str, len) {
+function mapCallback(str, len) {
     if (len === void 0) { len = 2; }
     return (new Array(len).join('0') + str).slice(-len);
 }
 
-function getLuminance(c) {
-    var i, x;
-    var a = []; // so we don't mutate
-    for (i = 0; i < c.length; i++) {
-        x = c[i] / 255;
-        a[i] = x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
-    }
-    return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+function isCloserToWhite(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    // returns true if the given color is closer to
+    // white, false if it is closer to black
+    return (r + g + b) / 3 >= 0.5;
 }
 
-function invertToBW(color, bw, asArr) {
-    var options = (bw === true)
-        ? DEFAULT_BW
-        : Object.assign({}, DEFAULT_BW, bw);
-    return getLuminance(color) > options.threshold
-        ? (asArr ? hexToRgbArray(options.black) : options.black)
-        : (asArr ? hexToRgbArray(options.white) : options.white);
+function parseRGBString(str) {
+    // let match = str.match(/^((?:rgb|hsl)a?)\((\d+),\s*([\d%]+),\s*([\d%]+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+    let match = str.match(/^(rgba?)\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+
+    // REGEX EXPLANATION
+    // Purpose: parse rgb(a) strings, to extract the values.
+    // Example: rgba(255, 10, 0, 0.9)
+    // Matches: ^^^^ ^^^  ^^  ^  ^^^
+    // Groups:  1    2    3   4  5
+    // The commented regex does the same, but it also factors in hsl.
+    return {
+        r: parseInt(match[2]),
+        g: parseInt(match[3]),
+        b: parseInt(match[4])
+    }
 }
 
 
@@ -75,41 +70,34 @@ function invertToBW(color, bw, asArr) {
 
 function invert(color) {
     if (!color) {return null;}
+    const rgb = parseRGBString(color);
 
-    var regex = /^((?:rgb|hsl)a?)\((\d+),\s*([\d%]+),\s*([\d%]+)(?:,\s*(\d+(?:\.\d+)?))?\)$/;
-    // example: rgba(255, 10, 0, 0.9)
-    // matches: ^^^^ ^^^  ^^  ^  ^^^
-    // it does match for the A value (match[5]), but it is not used
-
-    var match = color.match(regex);
-    if (match) {
-        var rgb = [match[2], match[3], match[4]];
+    if (rgb) {
+        let colormode = storageHandler('get', 'colormode');
+        colormode = colormode ? colormode : 'cl'
+        if (colormode === 'bw') {
+            return isCloserToWhite(rgb.r, rgb.g, rgb.b) ?
+                DEFAULT_BW.black :
+                DEFAULT_BW.white;
+        }
+        return '#' + rgb.map(c => { return mapCallback((255 - c).toString(16)); }).join('')
     } else {
         return null;
     }
-    colormode = storageHandler('get', 'colormode');
-    colormode = colormode ? colormode : 'cl'
-    if (colormode == 'bw')
-        return invertToBW(color, true);
-    return color ? '#' + rgb.map(function (c) { return padz((255 - c).toString(16)); }).join('') : null;
 }
 
-function main() {
+window.onload = () => {
     try {
-        p = document.getElementsByTagName('p');
-    } catch (err) {
-        return;
-    }
-    for (var x = 0; x < p.length; x++) {
-        color = p[x].style.color;
-        parents = getParents(p[x]);
-        for (var i = 0; i < parents.length; i++) {
-            if (parents[i].style.backgroundColor == color) {
-                p[x].style.color = invert(p[x].style.color);
-                break;
+        let p = document.getElementsByTagName('p');
+        for (let x = 0; x < p.length; x++) {
+            let color = p[x].style.color;
+            let parents = getParents(p[x]);
+            for (let i = 0; i < parents.length; i++) {
+                if (parents[i].style.backgroundColor === color) {
+                    p[x].style.color = invert(p[x].style.color);
+                    break;
+                }
             }
         }
-    }
+    } catch {}
 }
-
-window.onload = main;

@@ -1,58 +1,39 @@
 // HELPER FUNCTIONS
 
-function padz(str, len) {
+function mapCallback(str, len) {
     if (len === void 0) { len = 2; }
     return (new Array(len).join('0') + str).slice(-len);
 }
 
-function hexToRgbArray(hex) {
-    if (hex.slice(0, 1) === '#')
-        hex = hex.slice(1);
-    if (hex.length === 3) {
-        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+function parseRGBString(str) {
+    // let match = str.match(/^((?:rgb|hsl)a?)\((\d+),\s*([\d%]+),\s*([\d%]+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+    let match = str.match(/^(rgba?)\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+
+    // REGEX EXPLANATION
+    // Purpose: parse rgb(a) strings, to extract the values.
+    // Example: rgba(255, 10, 0, 0.9)
+    // Matches: ^^^^ ^^^  ^^  ^  ^^^
+    // Groups:  1    2    3   4  5
+    // The commented regex does the same, but it also factors in hsl.
+    return {
+        r: parseInt(match[2]),
+        g: parseInt(match[3]),
+        b: parseInt(match[4])
     }
-    return [
-        parseInt(hex.slice(0, 2), 16), // r
-        parseInt(hex.slice(2, 4), 16), // g
-        parseInt(hex.slice(4, 6), 16)  // b
-    ];
 }
+
 
 // MAIN FUNCTIONS
 
 function invert(color) {
     if (!color) {return null;}
-    if (color.includes("#")) {
-        var rgb = hexToRgbArray(color);
-    } else {
-        var regex = /^((?:rgb|hsl)a?)\((\d+),\s*([\d%]+),\s*([\d%]+)(?:,\s*(\d+(?:\.\d+)?))?\)$/;
-        var match = color.match(regex);
-        if (match) {
-            var rgb = [match[2], match[3], match[4]];
-        } else {
-            return null;
-        }
-    }
-    return '#' + rgb.map(function (c) { return padz((255 - c).toString(16)); }).join('');
+    let rgb = parseRGBString(color);
+    return '#' + [rgb.r, rgb.g, rgb.b].map((c) => { return mapCallback((255 - c).toString(16)); }).join('');
 }
 
-window.onload = function () {
+window.onload = () => {
     document.getElementById("cvc").addEventListener('change', (e) => {
         let color = e.target.value;
         document.getElementById('inverted').style.backgroundColor = invert(color);
     });
-    var invertButton = document.getElementById("parse");
-    invertButton.onclick = function () {
-        var color = document.getElementById("parse_t").value;
-        var invertedColor = invert(color);
-        if (invertedColor) {
-            var color = invert(invertedColor)
-            var text = document.getElementById("parsed_result");
-            text.innerHTML = `<span class="text" style="color: ${invertedColor}; background-color: ${color}">&nbsp;${invertedColor}&nbsp;</span>`;
-        } else {
-            alert("Invalid color");
-        }
-    }
 }
-
-console.log('yo')

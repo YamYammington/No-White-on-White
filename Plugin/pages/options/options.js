@@ -1,26 +1,29 @@
-window.onload = function() {
-    var colormode = document.getElementById('colormode');
-    var colormode_desc = document.getElementById('cm-desc');
-    var demo_btn = document.getElementById('demo-btn');
-    var demo_color = document.getElementById('demo-color');
-    var demo_bg = document.getElementById('demo-bg');
-    var demo_text = document.getElementById('demo-text');
-    var color_text = document.getElementById('selected-color');
+window.onload = () => {
+    let colormode = document.getElementById('colormode');
+    let colormode_desc = document.getElementById('cm-desc');
+    let demo_btn = document.getElementById('demo-btn');
+    let demo_color = document.getElementById('demo-color');
+    let demo_bg = document.getElementById('demo-bg');
+    let demo_text = document.getElementById('demo-text');
+    let color_text = document.getElementById('selected-color');
     color_text.innerHTML = 'Selected color: #000000';
 
-    demo_btn.onclick = demo;
+    demo_btn.onclick = () => {
+        let demo_bg = document.getElementById('demo-bg');
+        let demo_text = document.getElementById('demo-text');
+        demo_text.innerHTML = 'You can see me now!';
+        invert_demo(demo_bg.style.backgroundColor);
+    }
 
-    chrome.storage.sync.get(['colormode'], function(result) {
-        console.log('Value currently is ' + result.colormode);
+    chrome.storage.sync.get(['colormode'], (result) => {
         if (result.colormode === 'cl') {
             colormode_desc.innerText = 'If text color matches the background color, change the text color the opposite color of the background.';
         } else {
             colormode_desc.innerText = 'If text color matches the background color, change the text color to black or white, whichever gives more contrast.';
         }
-        var cm = result.colormode ? result.colormode : 'cl';
-        colormode.value = cm;
+        colormode.value = result.colormode ? result.colormode : 'cl';
     });
-    colormode.addEventListener('change', function() {
+    colormode.addEventListener('change', () => {
         if (colormode.value === 'cl') {
             colormode_desc.innerText = 'If text color matches the background color, change the text color the opposite color of the background.';
         } else {
@@ -28,73 +31,71 @@ window.onload = function() {
         }
 
         chrome.storage.sync.set({'colormode': colormode.value});
-        console.log('Value changed to ' + colormode.value);
     });
 
-    demo_color.addEventListener('change', function() {
+    demo_color.addEventListener('change', () => {
         demo_bg.style.backgroundColor = demo_color.value;
         demo_text.style.color = demo_color.value;
+        if (demo_text.innerHTML === 'You can see me now!') {
+            demo_text.innerHTML = 'You can\'t see me!'
+        }
         color_text.innerHTML = 'Selected color: ' + demo_color.value;
-
     });
 }
 
-var DEFAULT_THRESHOLD = Math.sqrt(1.05 * 0.05) - 0.05;
-var DEFAULT_BW = {
+const DEFAULT_THRESHOLD = Math.sqrt(1.05 * 0.05) - 0.05;
+const DEFAULT_BW = {
     black: '#000000',
     white: '#ffffff',
     threshold: DEFAULT_THRESHOLD
 };
 
-function padz(str, len) {
+function mapCallback(str, len) {
     if (len === void 0) { len = 2; }
     return (new Array(len).join('0') + str).slice(-len);
 }
 
-function getLuminance(c) {
-    var i, x;
-    var a = [];
-    for (i = 0; i < c.length; i++) {
-        x = c[i] / 255;
-        a[i] = x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+function isCloserToWhite(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    // returns true if the given color is closer to
+    // white, false if it is closer to black
+    return (r + g + b) / 3 >= 0.5;
+}
+
+function parseRGBString(str) {
+    // let match = str.match(/^((?:rgb|hsl)a?)\((\d+),\s*([\d%]+),\s*([\d%]+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+    let match = str.match(/^(rgba?)\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+
+    // REGEX EXPLANATION
+    // Purpose: parse rgb(a) strings, to extract the values.
+    // Example: rgba(255, 10, 0, 0.9)
+    // Matches: ^^^^ ^^^  ^^  ^  ^^^
+    // Groups:  1    2    3   4  5
+    // The commented regex does the same, but it also factors in hsl.
+    return {
+        r: parseInt(match[2]),
+        g: parseInt(match[3]),
+        b: parseInt(match[4])
     }
-    return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
-}
-
-function invertToBW(color, bw, asArr) {
-    var options = (bw === true)
-        ? DEFAULT_BW
-        : Object.assign({}, DEFAULT_BW, bw);
-    return getLuminance(color) > options.threshold
-        ? (asArr ? hexToRgbArray(options.black) : options.black)
-        : (asArr ? hexToRgbArray(options.white) : options.white);
-}
-
-function demo() {
-    // fix needed: black/white only returns white
-    var demo_bg = document.getElementById('demo-bg');
-    var demo_text = document.getElementById('demo-text');
-    demo_text.innerHTML = 'You can see me now!';
-    var c = demo_bg.style.backgroundColor;
-    invert_demo(c);
 }
 
 function invert_demo(color) {
-    // regex to extract color values from a rgb() style string
-    var regex = /^((?:rgb)a?)\((\d+),\s*([\d%]+),\s*([\d%]+)(?:,\s*(\d+(?:\.\d+)?))?\)$/;
-    var match = color.match(regex);
-    var rgb = [match[2], match[3], match[4]];
-    chrome.storage.sync.get(['colormode'], function(result) {
-        c = result.colormode ? result.colormode : 'cl'
-        if (c == 'bw') {
-            console.log('converting to bw')
-            var new_C = invertToBW(color, true);
-            var demo_text = document.getElementById('demo-text');
-            demo_text.style.color = new_C;
-        } else {
-            var new_C = color ? '#' + rgb.map(function (c) { return padz((255 - c).toString(16)); }).join('') : null;
-            var demo_text = document.getElementById('demo-text');
-            demo_text.style.color = new_C;
+    if (!color) {return null;}
+    const rgb = parseRGBString(color);
+    chrome.storage.sync.get(['colormode'], (result) => {
+        let c = result.colormode ? result.colormode : 'cl'
+        switch (c) {
+            case 'bw':
+                document.getElementById('demo-text').style.color = isCloserToWhite(rgb.r, rgb.b, rgb.b) ?
+                    DEFAULT_BW.black :
+                    DEFAULT_BW.white;
+                break;
+            case 'cl':
+                document.getElementById('demo-text').style.color = '#' + [rgb.r, rgb.b, rgb.b].map(c => {
+                    return mapCallback((255 - c).toString(16));
+                }).join('');
         }
     return true;
     });
