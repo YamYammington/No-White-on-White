@@ -34,11 +34,6 @@ function getParents(elem) {
   return parents;
 }
 
-function mapCallback(str, len) {
-    if (len === void 0) { len = 2; }
-    return (new Array(len).join('0') + str).slice(-len);
-}
-
 function isCloserToWhite(r, g, b) {
     r /= 255;
     g /= 255;
@@ -80,7 +75,9 @@ function invert(color) {
                 DEFAULT_BW.black :
                 DEFAULT_BW.white;
         }
-        return '#' + rgb.map(c => { return mapCallback((255 - c).toString(16)); }).join('')
+        return '#' + rgb.map(c => {
+            return (new Array(2).join('0') + (255 - c).toString(16)).slice(-2);
+        }).join('')
     } else {
         return null;
     }

@@ -1,10 +1,5 @@
 // HELPER FUNCTIONS
 
-function mapCallback(str, len) {
-    if (len === void 0) { len = 2; }
-    return (new Array(len).join('0') + str).slice(-len);
-}
-
 function parseRGBString(str) {
     // let match = str.match(/^((?:rgb|hsl)a?)\((\d+),\s*([\d%]+),\s*([\d%]+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
     let match = str.match(/^(rgba?)\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
@@ -27,8 +22,10 @@ function parseRGBString(str) {
 
 function invert(color) {
     if (!color) {return null;}
-    let rgb = parseRGBString(color);
-    return '#' + [rgb.r, rgb.g, rgb.b].map((c) => { return mapCallback((255 - c).toString(16)); }).join('');
+    const rgb = parseRGBString(color);
+    return '#' + rgb.map((callbackVar) => {
+        return (new Array(2).join('0') + (255 - callbackVar).toString(16)).slice(-2);
+    }).join('')
 }
 
 window.onload = () => {

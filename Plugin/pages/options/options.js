@@ -93,9 +93,10 @@ function invert_demo(color) {
                     DEFAULT_BW.white;
                 break;
             case 'cl':
-                document.getElementById('demo-text').style.color = '#' + [rgb.r, rgb.b, rgb.b].map(c => {
-                    return mapCallback((255 - c).toString(16));
+                document.getElementById('demo-text').style.color = '#' + rgb.map((callbackVar) => {
+                    return (new Array(2).join('0') + (255 - callbackVar).toString(16)).slice(-2);
                 }).join('');
+                break;
         }
     return true;
     });
